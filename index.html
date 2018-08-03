@@ -3,6 +3,9 @@
 <head>
 	<title>Wave n Watch</title>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+ <script type="text/javascript" src="libs/polyfill.js"></script> 
+  <script type="text/javascript" src="libs/cv.js"></script> 
+  <script type="text/javascript" src="libs/handtracking.js"></script> 
 
 	<style type="text/css">
 		*{
@@ -11,18 +14,224 @@
              font-family: 'Roboto', sans-serif;
 
 		}
-	</style>
+	
+	.ad{
+		display:none;max-width: 90%;
+	}
+	.ad.show{
+		display: block;
+	}
+	#videoElement {
+    min-height: 200px;
+    max-width: 200px;
+    background-color: transparent;
+}
+#container {
+    margin: 0px auto;
+    text-align: center;
+
+}
+</style>
+
+<script type="text/javascript">
+		function wave() {
+	
+var elems = document.querySelectorAll(".ad.show");
+
+[].forEach.call(elems, function(el) {
+    el.classList.remove("show");
+});
+
+
+
+var r=Math.floor(Math.random() * 11);
+document.getElementById('ad_'+r).classList=document.getElementById('ad_'+r).classList+" show";
+
+		}
+
+	</script>
+
+
+
+ <script>
+  
+    var DEMO = function(){
+    };
+    
+    DEMO.prototype.start = function() {
+      var that = this;
+    
+      this.tracker = new HT.Tracker();
+
+   
+      this.video = document.getElementById("video");
+      this.canvas = document.getElementById("canvas");
+      this.context = this.canvas.getContext("2d");
+
+      this.canvas.width = parseInt(this.canvas.style.width);
+      this.canvas.height = parseInt(this.canvas.style.height);
+      
+      this.image = this.context.createImageData(
+        this.canvas.width * 0.2, this.canvas.height * 0.2);
+      
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+      if (navigator.getUserMedia){
+        navigator.getUserMedia({video: true},
+          function(stream){ return that.videoReady(stream); },
+          function(error){ return that.videoError(error); } );
+      }
+    };
+    
+    DEMO.prototype.videoReady = function(stream){
+      if (window.webkitURL) {
+        this.video.src = window.webkitURL.createObjectURL(stream);
+      } else if (video.mozSrcObject !== undefined) {
+        this.video.mozSrcObject = stream;
+      } else {
+        this.video.src = stream;
+      }
+      
+      this.tick();
+    };
+      
+    DEMO.prototype.videoError = function(error){
+    };
+
+    DEMO.prototype.tick = function(){
+      var that = this, image, candidate;
+    
+      requestAnimationFrame( function() { return that.tick(); } );
+      
+      if (this.video.readyState === this.video.HAVE_ENOUGH_DATA){
+        image = this.snapshot();
+        
+        candidate = this.tracker.detect(image);
+        
+        this.draw(candidate);
+      }
+    };
+    
+    DEMO.prototype.snapshot = function(){
+      this.context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        
+      return this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    };
+
+    DEMO.prototype.draw = function(candidate){
+      if (candidate){
+      
+
+ // if(candidate.defects.length<5)console.log(candidate.defects.length +"Waving");
+if( candidate.defects.length<6 &&( candidate.hull.length>6 && candidate.hull.length<10 )) {console.log(candidate.hull.length+","+candidate.defects.length);
+wave();
+}
+        // if (this.cbxHull.checked){
+
+        //   this.drawHull(candidate.hull, "red");
+
+        // }
+        
+        // if (this.cbxDefects.checked){
+        //   this.drawDefects(candidate.defects, "blue");
+        // }
+      }
+      
+     
+    };
+    
+    DEMO.prototype.drawHull = function(hull, color){
+      var len = hull.length, i = 1;
+    
+      if (len > 0){
+        this.context.beginPath();
+        this.context.lineWidth = 3;
+        this.context.strokeStyle = color;
+
+        this.context.moveTo(hull[0].x, hull[0].y);
+        for (; i < len; ++ i){
+          this.context.lineTo(hull[i].x, hull[i].y);
+        }
+
+        this.context.stroke();
+        this.context.closePath();
+      }
+    };
+    
+    DEMO.prototype.drawDefects = function(defects, color){
+      var len = defects.length, i = 0, point;
+    
+      if (len > 0){
+        this.context.beginPath();
+        this.context.lineWidth = 3;
+        this.context.strokeStyle = color;
+
+        for (; i < len; ++ i){
+          point = defects[i].depthPoint;
+          this.context.strokeRect(point.x - 4, point.y - 4, 8, 8);
+        }
+
+        this.context.stroke();
+        this.context.closePath();
+      }
+    };
+
+    DEMO.prototype.createImage = function(imageSrc, imageDst){
+      var src = imageSrc.data, dst = imageDst.data,
+          width = imageSrc.width, span = 4 * width,
+          len = src.length, i = 0, j = 0, k = 0;
+      
+      for(i = 0; i < len; i += span){
+      
+        for(j = 0; j < width; j += 5){
+        
+          dst[k] = dst[k + 1] = dst[k + 2] = src[i];
+          dst[k + 3] = 255;
+          k += 4;
+          
+          i += 5;
+        }
+      }
+      
+      return imageDst;
+    };
+
+    window.onload = function(){
+      var demo = new DEMO();
+      demo.start();
+    };
+  
+  </script>
+
+
+
+
+
+
 </head>
+
 <body>
-<h1 style="font-size: 200%;text-align: center;letter-spacing: 0.1em;">
+<h1 style="font-size: 200%;text-align: center;letter-spacing: 0.1em;cursor:pointer;" onclick="wave()" id="msgs">
 	Wave!
-	<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-3818168584673732",
-    enable_page_level_ads: true
-  });
-</script>
-</h1>
+	</h1>
+	
+
+	<div id="container">
+		  <video id="video" autoplay="true" style="display:none;"></video>
+    <canvas id="canvas" style="width:250px; height:250px;border:1px solid black;"></canvas>
+	</div>
+	<div id="ads" style="padding: 6%;display:block;text-align: center;text-align: -webkit-center">
+	<img  id="ad_1" class="ad fashion f" src="https://www.echemist.co.uk/media/brand/loreal-hair-care.png"/>
+	<img id="ad_2" class="ad fashion" src="http://www.tommyhilfigertshirts.com/images/product/Tommy-Hilfiger-Cotton-Fleece-Logo-Sweatshirt-Grey-Marl-Grey-Sweatshirts-Dm0dm01657-2.jpg" />
+	<img id="ad_3" class="ad fashion" src="http://www.ragtradeatlanta.com/wp-content/uploads/2015/07/guess-automne-hiver-2013-2014-une-campagne.jpg"/>
+	<img id="ad_4" class="ad food" src="https://cdn-a.william-reed.com/var/wrbm_gb_food_pharma/storage/images/5/9/4/0/520495-1-eng-GB/PepsiCo-launches-new-Lay-s-potato-chip-promotion-Flavor-Swap_wrbm_large.png"/>
+	<img id="ad_5" class="ad food" src="https://images.heb.com/is/image/HEBGrocery/000402347-1?id=MEgS52&fmt=jpg&fit=constrain,1&wid=296&hei=296">
+	<img id="ad_6" class="ad living" src="https://www.bettinaequities.com/wp-content/uploads/2017/01/BETTINA-LOGO-PYRAMID_TYPE_small.jpg">
+	<img id="ad_7" class="ad living" src="http://static1.squarespace.com/static/51daf58ae4b08f20257f405d/t/51df1706e4b0ff2f7c9bb049/1444336182131/">
+	<img id="ad_8" class="ad domesticneeds" src="https://images.samsclubresources.com/is/image/samsclub/0003600035834_A?$img_size_380x380$">
+	<img src="https://target.scene7.com/is/image/Target/13043814?wid=488&hei=488&fmt=pjpeg" id="ad_9" class="ad domesticneeds">
+	<img id="ad_10" class="ad selfhelp" src="https://www.educationalappstore.com/images/screenshots/app9144/screenshot-0.jpg">
+	<img src="https://www.muycomputer.com/wp-content/uploads/2012/01/khan_academy_3.jpg" id="ad_0" class="ad selfhelp">
+	</div>
+
 </body>
 </html>
